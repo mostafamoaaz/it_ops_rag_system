@@ -10,10 +10,20 @@ from list_gemini_models import get_best_available_model
 
 # 1. Environment & API Initialization
 load_dotenv()
-api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("GEMINI_API_KEY not found in .env file! Please verify your configuration.")
 
+# Read from Streamlit Cloud Secrets first; fallback to local .env
+api_key = None
+try:
+    if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+        api_key = st.secrets["GEMINI_API_KEY"]
+except Exception:
+    pass
+
+if not api_key:
+    api_key = os.getenv("GEMINI_API_KEY")
+
+if not api_key:
+    raise ValueError("GEMINI_API_KEY not found in Streamlit Secrets or .env!")
 client = genai.Client(api_key=api_key)
 
 # 2. Strict Grounded System Prompt

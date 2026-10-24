@@ -1,9 +1,8 @@
 
 from typing import Any
 import numpy as np
-import os
 import chromadb
-from create_vector_store import build_and_populate_chroma
+from create_vector_store import initialize_vector_store, CHROMA_PATH, COLLECTION_NAME
 from preprocessing import preprocess_text
 from vector_representation import (
     get_dense_embeddings,
@@ -11,17 +10,19 @@ from vector_representation import (
     compute_hybrid_scores,
 )
 
-PERSIST_DIR = "./chroma_db"
-COLLECTION_NAME = "it_ops_runbooks"
-
 
 def get_chroma_collection():
-    # If chroma_db hasn't been built yet on Streamlit Cloud, build it once
-    if not os.path.exists(PERSIST_DIR) or not os.listdir(PERSIST_DIR):
-        print("Vector store not found. Building ChromaDB index from documents...")
-        build_and_populate_chroma()
-        
-    client = chromadb.PersistentClient(path=PERSIST_DIR)
+    """
+    Connects to the persistent ChromaDB collection.
+    If running on Streamlit Cloud and chroma_db doesn't exist yet,
+    initializes and populates the store automatically.
+    """
+    if not CHROMA_PATH.exists() or not any(CHROMA_PATH.iterdir()):
+        print("ChromaDB storage not found. Building index from documents...")
+        client, collection = initialize_vector_store()
+        return collection
+
+    client = chromadb.PersistentClient(path=str(CHROMA_PATH))
     return client.get_collection(name=COLLECTION_NAME)
 
 
@@ -40,7 +41,7 @@ def hybrid_search(
         alpha: Weight for dense vs lexical (1.0 = pure semantic, 0.0 = pure BM25).
         current_only: If True, filters out superseded/outdated operational runbooks.
     """
-    collection = get_collection()
+    collection = get_chroma_collection()  # Fixed here!
 
     # Apply metadata filter if current_only is True
     where_filter = {"is_current": True} if current_only else None
@@ -91,9 +92,7 @@ def hybrid_search(
 
 
 if __name__ == "__main__":
-    # test_query = "What command is used to unlock a stuck Terraform state file in DynamoDB?"
     test_query = "What port is used to connect via teleport bastion?"
-    # test_query = "How to recover when /var/mqm is 100% full?"
     print(f"Running hybrid search test for query: '{test_query}'\n")
     matches = hybrid_search(test_query, top_k=3, alpha=0.5)
 
