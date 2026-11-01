@@ -28,8 +28,8 @@ def get_chroma_collection():
 
 def hybrid_search(
     query: str,
-    top_k: int = 5,
-    alpha: float = 0.5,
+    top_k: int = 4,      # Updated from 5/3 to optimal 4
+    alpha: float = 0.8,  # Updated from 0.5 to optimal 0.8
     current_only: bool = True
 ) -> list[dict[str, Any]]:
     """

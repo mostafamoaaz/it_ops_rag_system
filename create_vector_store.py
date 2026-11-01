@@ -25,7 +25,7 @@ def initialize_vector_store():
     )
 
     print("Generating chunks from operational documents...")
-    chunks = build_chunked_corpus(DOCUMENTS, chunk_size=40, overlap=10)
+    chunks = build_chunked_corpus(DOCUMENTS)
     print(f"Total chunks to index: {len(chunks)}")
 
     ids = [c["chunk_id"] for c in chunks]

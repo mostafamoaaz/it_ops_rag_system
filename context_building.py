@@ -63,16 +63,23 @@ def build_context_package(
 
 def retrieve_and_build_context(
     query: str,
-    top_k: int = 5,
-    alpha: float = 0.5,
+    top_k: int | None = None,
+    alpha: float | None = None,
     word_budget: int = DEFAULT_WORD_BUDGET,
     current_only: bool = True
 ) -> tuple[str, list[dict[str, Any]]]:
     """
     End-to-end convenience function: retrieves candidate chunks and packages them.
-    Returns (context_text, raw_chunks).
+    Defers top_k and alpha defaults directly to hybrid_search() in retrieve.py.
     """
-    chunks = hybrid_search(query=query, top_k=top_k, alpha=alpha, current_only=current_only)
+    # Build kwargs dynamically, omitting top_k and alpha if None so hybrid_search uses its own defaults
+    search_kwargs: dict[str, Any] = {"query": query, "current_only": current_only}
+    if top_k is not None:
+        search_kwargs["top_k"] = top_k
+    if alpha is not None:
+        search_kwargs["alpha"] = alpha
+
+    chunks = hybrid_search(**search_kwargs)
     context = build_context_package(chunks, word_budget=word_budget)
     return context, chunks
 

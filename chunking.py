@@ -2,10 +2,13 @@ from typing import Any
 from documents import DOCUMENTS
 
 
+DEFAULT_CHUNK_SIZE = 35
+DEFAULT_OVERLAP = 0
+
 def chunk_document(
     doc: dict[str, Any],
-    chunk_size: int = 40,
-    overlap: int = 10
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+    overlap: int = DEFAULT_OVERLAP
 ) -> list[dict[str, Any]]:
     """
     Splits a single document's text into fixed-size chunks with overlap.

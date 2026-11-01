@@ -51,20 +51,19 @@ TECHNICAL RESOLUTION:"""
 
 def generate_rag_response(
     query: str,
-    alpha: float = 0.5,
-    top_k: int = 4,
+    alpha: float | None = None,   # Changed default from 0.5 to None
+    top_k: int | None = None,     # Changed default from 4 to None
     word_budget: int = 350,
     model: str = None
 ) -> dict:
     """
     Executes hybrid retrieval, builds context, and invokes the selected Gemini model.
-    Automatically resolves the best active model if none is explicitly provided.
+    Defers retrieval parameters (alpha, top_k) directly to retrieve.py.
     """
-    # Dynamically select active model from list_gemini_models.py if unspecified
     if not model:
         model = get_best_available_model(client)
 
-    # Retrieve candidate chunks and package within word budget
+    # Pass alpha and top_k directly (if None, retrieve.py uses its tuned defaults)
     context, retrieved_chunks = retrieve_and_build_context(
         query=query,
         top_k=top_k,
@@ -109,7 +108,9 @@ def generate_rag_response(
 if __name__ == "__main__":
     test_q = "How do I resolve an emergency where /var/mqm is completely full?"
     print(f"Testing RAG prompt generation for: '{test_q}'\n")
-    res = generate_rag_response(test_q, alpha=0.5)
+    # Clean call: automatically inherits alpha=0.8 and top_k=4 from retrieve.py
+    res = generate_rag_response(test_q)
+    
     print(f"--- Model Selected: {res['model_used']} ---")
     print("=== MODEL RESOLUTION ===")
     print(res["answer"])
